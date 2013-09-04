@@ -1,5 +1,7 @@
 use Mojolicious::Lite;
-use lib 'door/lib';
+use FindBin qw($Bin);
+use File::Basename;
+use lib "$Bin/lib";
 use Door::Strike;
 use Door::Schema;
 use HTTP::BrowserDetect;
@@ -7,7 +9,7 @@ use Data::Dumper;
 
 use constant INTERNAL => qr/^127\.|^(172\.16\.254\.\d{1,3})$/;
 
-app->config(hypnotoad => {pid_file=>'.door', listen=>['http://*:3005'], proxy=>1});
+app->config(hypnotoad => {pid_file=>$Bin.'/../.'.(basename $0, '.pl'), listen=>[split ',', $ENV{MOJO_LISTEN}], proxy=>$ENV{MOJO_REVERSE_PROXY}||1});
 
 helper internal => sub { shift->tx->remote_address=~INTERNAL?1:0 };
 helper door => sub { Door::Schema->connect({dsn=>'DBI:mysql:database=door;host=localhost',user=>'door',password=>'door'}) };
@@ -39,6 +41,19 @@ get '/log/:rows' => sub {
 	my @log = $self->door->resultset('Log')->search(undef, {select => ['id', {date_format=>['dt', '"%a, %b %e, %Y %r"'],-as=>'dt'}, 'user_id', 'message'], order_by => { -desc => 'id'}, rows => $rows})
 		or return $self->redirect_to('index');
 	$self->render('log', log => \@log);
+};
+
+get '/register' => sub {
+	my $self = shift;
+	my @badges = $self->door->resultset('Door')->search({user_id=>undef});
+	$self->render('register', badges => \@badges);
+};
+post '/register' => sub {
+	my $self = shift;
+	my ($badge, $name, $acl) = ($self->param('badge'), $self->param('name'), $self->param('acl'));
+	my $user = $self->door->resultset('User')->create({name => $name});
+	$self->door->resultset('Door')->search({badge=>$badge})->update({user_id=>$user->user_id, acl=>$acl||1});
+	return $self->render_json({res=>'ok'});
 };
 
 app->start;
@@ -189,6 +204,44 @@ Welcome, <span id="name"><%= session('name') || 'stranger' %></span> from <%= $s
 </div>
 </div>
 </div>
+</body>
+</html>
+
+@@ register.html.ep
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+<title>Cogstone Door : Register</title>
+<link   href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" type="text/css" rel="stylesheet" media="all" />
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js" type="text/javascript"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js" type="text/javascript"></script>
+<script type="text/javascript">//<![CDATA[
+$(document).ready(function(){
+    $("input[type='text']").change(function(){
+        $.post("/register", {badge: $(this).attr('name'), name: $(this).val()}, function(data){
+            if ( data.ok ) {
+		$("#msg").html("Ok!");
+            } else {
+                $("#msg").html("Err!");
+            }
+            return true;
+	});
+    });
+});
+//]]></script>
+</head>
+<body>
+<form name=badges>
+<table>
+<tr><th>Badge #</th><th>Name</th></tr>
+% foreach my $badge ( @$badges ) {
+	<tr><td><%= $badge->badge %></td><td><input type=text name=<%= $badge->badge %> value="" /></td></tr>
+% }
+</table>
+</form>
+<div id=msg></div>
 </body>
 </html>
 
