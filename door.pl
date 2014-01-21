@@ -45,16 +45,19 @@ get '/log/:rows' => sub {
 
 get '/register' => sub {
 	my $self = shift;
-	my @badges = $self->door->resultset('Door')->search({user_id=>undef});
+	my @badges = $self->door->resultset('Door')->search({user_id=>undef,sn=>{'!='=>undef}}, {order_by=>'badge'});
 	$self->render('register', badges => \@badges);
 };
 post '/add' => sub {
 	my $self = shift;
 	my ($start, $end) = ($self->param('start'), $self->param('end'));
+	return $self->render_json({res=>'need to define start and end'}) unless $start && $end;
+	my $c = 0;
 	for ( "$start" .. "$end" ) {
+		$c++;
 		$self->door->resultset('Door')->create({badge=>$_});
 	}
-	return $self->render_json({res=>'ok'});
+	return $self->render_json({res=>"Added $c badges"});
 };
 post '/assign' => sub {
 	my $self = shift;
@@ -260,12 +263,11 @@ End: <input type=text name="end"><br/ >
 </form>
 <form name=assign>
 <table>
-<tr><th>Badge #</th><th>Name</th></tr>
+<tr><th>Badge #</th><th>Name (press tab when finished to accept)</th></tr>
 % foreach my $badge ( @$badges ) {
 	<tr><td><%= $badge->badge %></td><td><input type=text name=<%= $badge->badge %> value="" /></td></tr>
 % }
 </table>
-<input type=submit value="Assign Badge" />
 </form>
 <div id=assign_msg></div>
 </body>
