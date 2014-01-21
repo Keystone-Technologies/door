@@ -48,7 +48,15 @@ get '/register' => sub {
 	my @badges = $self->door->resultset('Door')->search({user_id=>undef});
 	$self->render('register', badges => \@badges);
 };
-post '/register' => sub {
+post '/add' => sub {
+	my $self = shift;
+	my ($start, $end) = ($self->param('start'), $self->param('end'));
+	for ( "$start" .. "$end" ) {
+		$self->door->resultset('Door')->create({badge=>$_});
+	}
+	return $self->render_json({res=>'ok'});
+};
+post '/assign' => sub {
 	my $self = shift;
 	my ($badge, $name, $acl) = ($self->param('badge'), $self->param('name'), $self->param('acl'));
 	my $user = $self->door->resultset('User')->create({name => $name});
@@ -219,12 +227,22 @@ Welcome, <span id="name"><%= session('name') || 'stranger' %></span> from <%= $s
 <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js" type="text/javascript"></script>
 <script type="text/javascript">//<![CDATA[
 $(document).ready(function(){
-    $("input[type='text']").change(function(){
-        $.post("/register", {badge: $(this).attr('name'), name: $(this).val()}, function(data){
-            if ( data.ok ) {
-		$("#msg").html("Ok!");
+    $("input[type='button']").click(function(){
+        $.post("/add", {start: $("input[name='start']").val(), end: $("input[name='end']").val()}, function(data){
+            if ( data.res == "ok" ) {
+		$("#add_msg").html("Ok!");
             } else {
-                $("#msg").html("Err!");
+                $("#add_msg").html("Err!");
+            }
+            return true;
+	});
+    });
+    $("input[type='text']").change(function(){
+        $.post("/assign", {badge: $(this).attr('name'), name: $(this).val()}, function(data){
+            if ( data.res == "ok" ) {
+		$("#assign_msg").html("Ok!");
+            } else {
+                $("#assign_msg").html("Err!");
             }
             return true;
 	});
@@ -233,15 +251,23 @@ $(document).ready(function(){
 //]]></script>
 </head>
 <body>
-<form name=badges>
+<form name=add>
+Add range:<br />
+Start: <input type=text name="start"><br/ >
+End: <input type=text name="end"><br/ >
+<input type=button value="Add Badges" />
+<div id=add_msg></div>
+</form>
+<form name=assign>
 <table>
 <tr><th>Badge #</th><th>Name</th></tr>
 % foreach my $badge ( @$badges ) {
 	<tr><td><%= $badge->badge %></td><td><input type=text name=<%= $badge->badge %> value="" /></td></tr>
 % }
 </table>
+<input type=submit value="Assign Badge" />
 </form>
-<div id=msg></div>
+<div id=assign_msg></div>
 </body>
 </html>
 
