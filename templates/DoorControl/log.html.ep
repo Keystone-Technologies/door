@@ -1,0 +1,5 @@
+<h1>logs</h1>
+
+%for my $log (@$logs) {
+  <h3><%=$log->{name}%> <%=$log->{action}%>s at <%=$log->{created}%>. Result: <%=$log->{result}%></h3>
+%}
