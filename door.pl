@@ -83,6 +83,8 @@ __DATA__
     #name {cursor:pointer;text-decoration:underline;color:blue}
     #ofd, #login, #dialog-message {display:none}
     #hold {cursor:pointer;text-decoration:underline}
+    #lock {cursor:pointer;text-decoration:underline}
+    #unlock {cursor:pointer;text-decoration:underline}
     #click {cursor:pointer;text-decoration:underline;color:blue;font-size:12px}
 /* ]]> */-->
 </style>
@@ -114,6 +116,54 @@ $(document).ready(function(){
             % unless ( $self->internal || session 'pin' ) {
                 $("#login").show();
             % }
+        });
+    });
+    $("#unlock").click(function(){
+        $.post("/ofd", {state: 1, note: "Unlock", pin: $('#pin').val(), remember: $('#remember').is(":checked")?1:0}, function(data){
+            if ( data.ok ) {
+                if ( $('#remember').is(":checked") ) {
+                    $("#login").hide();
+                }
+                if ( data.name ) {
+                    $("#name").html(data.name);
+                }
+            } else {
+                $("#login").show();
+                $("#strike-message").html(data.message);
+                $("#dialog-message").dialog({
+                    modal: true,
+                    buttons: {
+                        Ok: function() {
+                            $("#unlock").css("color", "blue");
+                            $(this).dialog("close");
+                        }
+                    }
+                });
+            }
+        });
+    });
+    $("#lock").click(function(){
+        $.post("/ofd", {state: 0, note: "Lock"}, function(data){
+            if ( data.ok ) {
+                if ( $('#remember').is(":checked") ) {
+                    $("#login").hide();
+                }
+                if ( data.name ) {
+                    $("#name").html(data.name);
+                }
+            } else {
+                $("#login").show();
+                $("#strike-message").html(data.message);
+                $("#dialog-message").dialog({
+                    modal: true,
+                    buttons: {
+                        Ok: function() {
+                            $("#lock").css("color", "blue");
+                            $(this).dialog("close");
+                        }
+                    }
+                });
+            }
         });
     });
     $("#hold").css("color", "blue").bind('vmousedown', function(e){
@@ -202,6 +252,8 @@ Welcome, <span id="name"><%= session('name') || 'stranger' %></span> from <%= $s
       <div id="click"><br /><br />Pulse Front Door Buzzer</div>
     % } else {
       <div id="hold" data-role="button" data-icon="gear">Front Door Buzzer</div><br />
+      <div id="lock" data-role="button" data-icon="gear">Lock Front Door</div><br />
+      <div id="unlock" data-role="button" data-icon="gear">Unlock Front Door</div><br />
     % }
 </div>
 <div id="dialog-message" title="Failed to unlock">
