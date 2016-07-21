@@ -37,13 +37,6 @@ sub unlock {
         $unlockResults = "SUCCESS";
     }
     
-    if(!$self->param('hold')) {
-        $self->delay(
-            sub { Mojo::IOLoop->timer(30 => shift->begin) },
-            sub { $self->lock },
-        );
-    }
-    
     $self->pg->db->query("insert into log (name, action, result) values (?, 'unlock', ?);", $name, $unlockResults);
     
     $self->render(json => $response);
