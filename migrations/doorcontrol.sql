@@ -1,14 +1,13 @@
 -- 1 up
 
 create table if not exists users (
-    id          serial primary key,
     name        text not null,
     pin         int not null,
     authorized  int not null,
     created     timestamptz not null default now()
 );
 
-insert into users (id, name, pin, authorized) values (0, 'admin', 6292, 1);
+insert into users (name, pin, authorized) values ('admin', 6292, 1);
 
 -- 1 down
 

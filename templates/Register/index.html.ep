@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <title>Register</title>
+    <script>
+        
+        function signIn() {
+            $.ajax({
+                url: '/register/signin',
+                type: "POST",
+                dataType: "json",
+                data: {name : $("#name").val(),
+                       pin : $("#pin").val()
+                }
+            }).done(function(data){
+                if(data.results) {
+                    $("#signIn").hide();
+                    $("#addUser").show();
+                }
+                else
+                {
+                    $("#error").html("Invalid login").show();
+                    setTimeout(function(){$("#error").hide()}, 5000);
+                }
+            });
+        }
+        
+        function addUser() {
+            console.log()
+            $.ajax({
+                url: '/register/adduser',
+                type: "POST",
+                dataType: "json",
+                data: {name : $("#name").val(),
+                       pin : $("#pin").val(),
+                       newName : $("#newName").val(),
+                       newPin : $("#newPin").val()
+                }
+            }).done(function(data){
+                if(data.results) {
+                    $("#newError").html("Succes! New user added.").show();
+                    setTimeout(function(){$("#newError").hide()}, 5000);
+                }
+                else
+                {
+                    $("#newError").html("Failed for unkown reason.").show();
+                    setTimeout(function(){$("#newError").hide()}, 5000);
+                }
+            });
+        }
+        
+        $(document).ready(function(){
+            $("#addUser").hide();
+            $("#error").hide();
+        });
+        
+    </script>
+</head>
+<body>
+    <div id="signIn">
+        <h1>sign in</h1>
+        <h3>To register a new user, you must be signed in and authorized</h3>
+        <input id="name" type="text" placeholder="name"></textarea>
+        <input id="pin" type="password" rows=1 placeholder="pin">
+        <button onclick="signIn()">sign in</button>
+        <span id="error" style="color:red"></span>
+    </div>
+    <div id="addUser">
+        <h1>add user</h1>
+        <input id="newName" type="text" placeholder="name"></textarea>
+        <input id="newPin" type="password" rows=1 placeholder="pin">
+        <button onclick="addUser()">Add User</button>
+        <span id="newError" style="color:red"></span>
+    </div>
+    <h3><a href='/'>Return Home</a></h3>
+</body>
+
+</html>
