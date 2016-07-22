@@ -16,6 +16,8 @@ sub unlock {
     my $pin = $self->param('pin');
     my $remember = $self->param('remember');
     
+    my $unlockResults = "FAILED";
+    
     my $results = eval {
         $self->pg->db->query("select * from users where name = ? and pin = ?", $name, $pin)->hash;
     };
@@ -32,16 +34,10 @@ sub unlock {
             $self->session->{pin} = $pin;
             $self->session->{name} = $name;
         }
+        $unlockResults = "SUCCESS";
     }
     
-    if(!$self->param('hold')) {
-        $self->delay(
-            sub { Mojo::IOLoop->timer(30 => shift->begin) },
-            sub { $self->lock },
-        );
-    }
-    
-    $self->pg->db->query("insert into log (name, action, result) values (?, 'unlock', 'success?');", $name);
+    $self->pg->db->query("insert into log (name, action, result) values (?, 'unlock', ?);", $name, $unlockResults);
     
     $self->render(json => $response);
 }
@@ -55,7 +51,7 @@ sub lock {
     
     my $response->{response} = 1;
     
-    $self->pg->db->query("insert into log (name, action, result) values ('door', 'lock', 'success');");
+    $self->pg->db->query("insert into log (name, action, result) values ('door', 'lock', 'SUCCESS');");
     
     $self->render(json => $response);
 }

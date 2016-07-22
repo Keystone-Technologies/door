@@ -159,6 +159,7 @@ $(document).ready(function(){
 <div data-role="header">
 <h1><a href="/log/20" rel="external">Door Access!</a></h1>
 </div>
+Click <a href="/register" rel="external">here</a> to add new users
 <div data-role="content">
 Welcome, <span id="name"><%= session('name') || 'stranger' %></span> from <%= $self->tx->remote_address %>
 

@@ -32,9 +32,12 @@ sub startup {
   $r->get('/')->to('DoorControl#init');
   $r->get('/forget')->to('DoorControl#forget');
   $r->get('/log/:count')->to('DoorControl#log');
+  $r->get('/register')->to('Register#index');
   
   $r->post('/unlock')->to('DoorControl#unlock');
   $r->post('/lock')->to("DoorControl#lock");
+  $r->post('/register/signin')->to('Register#signin');
+  $r->post('/register/adduser')->to('Register#adduser');
 }
 
 1;
