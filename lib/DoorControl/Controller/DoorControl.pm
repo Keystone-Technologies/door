@@ -1,6 +1,8 @@
 package DoorControl::Controller::DoorControl;
 use Mojo::Base 'Mojolicious::Controller';
 
+use Date::Manip;
+
 # This action will render a template
 sub init {
   my $self = shift;
@@ -24,17 +26,20 @@ sub unlock {
     
     my $response->{result} = 0;
     
-    if($results->{authorized} == 1) {
+    if($results->{authorized} == 1 || ($results->{authorized} == 2 && Date_IsWorkDay(ParseDate('now'), 1))) {
         $response->{result} = 1;
         my $req = HTTP::Request->new(GET => "http://theofficialjosh.com/test");
         my $ua = LWP::UserAgent->new;
-        $response->{response} = $ua->request($req)->as_string;
+        $response->{response} = $ua->request($req)->is_success;
         
         if($remember) {
             $self->session->{pin} = $pin;
             $self->session->{name} = $name;
         }
-        $unlockResults = "SUCCESS";
+        
+        if($response->{response}) {
+            $unlockResults = "SUCCESS";
+        }
     }
     
     $self->pg->db->query("insert into log (name, action, result) values (?, 'unlock', ?);", $name, $unlockResults);
@@ -47,11 +52,9 @@ sub lock {
     #locks the door, maybe happens automatically after unlocking it?
     my $req = HTTP::Request->new(GET => "http://theofficialjosh.com/test");
     my $ua = LWP::UserAgent->new;
-    $ua->request($req)->as_string;
+    my $response->{response} = $ua->request($req)->is_success;
     
-    my $response->{response} = 1;
-    
-    $self->pg->db->query("insert into log (name, action, result) values ('door', 'lock', 'SUCCESS');");
+    $self->pg->db->query("insert into log (name, action, result) values ('door', 'lock', ?);", $response->{response} ? 'SUCCESS' : 'FAILED');
     
     $self->render(json => $response);
 }

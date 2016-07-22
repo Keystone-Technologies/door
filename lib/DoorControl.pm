@@ -6,6 +6,8 @@ use Mojo::IOLoop;
 use Mojo::Pg;
 use HTTP::Request;
 use LWP::UserAgent;
+use Date::Manip::DM5;
+use Time::ParseDate;
 
 use constant INTERNAL => qr/^127\.|^(172\.16\.254\.\d{1,3})$/;
 
@@ -13,9 +15,12 @@ use constant INTERNAL => qr/^127\.|^(172\.16\.254\.\d{1,3})$/;
 sub startup {
   my $self = shift;
   
+  push @{$self->commands->namespaces}, 'DoorControl::Command';
+  
   $self->plugin('browser_detect');
-
   my $config = $self->plugin('Config');
+
+  Date_Init('WorkDayBeg = 07:00', 'WorkDayEnd = 18:00');
 
   $self->helper(internal => sub { shift->tx->remote_address=~INTERNAL?1:0 });
   $self->helper(pg => sub {state $pg = Mojo::Pg->new(shift->config('pg')) });

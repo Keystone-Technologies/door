@@ -33,6 +33,7 @@ sub adduser {
     my $pin = $self->param('pin');
     my $newName = $self->param('newName');
     my $newPin = $self->param('newPin');
+    my $auth = $self->param('auth');
     
     my $response->{results} = 0;
     
@@ -42,7 +43,7 @@ sub adduser {
     
     if($results->{authorized} == 1) {
         $response->{results} = 1;
-        $self->pg->db->query("insert into users (name, pin, authorized) values (?, ?, 1);", $newName, $newPin);
+        $self->pg->db->query("insert into users (name, pin, authorized) values (?, ?, ?);", $newName, $newPin, $auth);
     };
     
     $self->render(json => $response);
@@ -76,6 +77,7 @@ sub addbadge {
     my $pin = $self->param('pin');
     my $badge = $self->param('badge');
     my $newName = $self->param('newName');
+    my $auth = $self->param('auth');
     
     my $response->{results} = 0;
     
@@ -87,7 +89,7 @@ sub addbadge {
         $response->{results} = 1;
         $results = eval {
             $self->pg->db->query("delete from badges where badge_id = ?", $badge);
-            $self->pg->db->query("insert into badges (badge_id, name, authorized) values (?, ?, 1);", $badge, $newName);
+            $self->pg->db->query("insert into badges (badge_id, name, authorized) values (?, ?, ?);", $badge, $newName, $auth);
         };
     };
     

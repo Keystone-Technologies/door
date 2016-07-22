@@ -38,7 +38,9 @@
                 data: {name : $("#name").val(),
                        pin : $("#pin").val(),
                        newName : $("#newName").val(),
-                       newPin : $("#newPin").val()
+                       newPin : $("#newPin").val(),
+                       auth : ($("#allTimes").is(":checked") ? 1 : 2)
+                       
                 }
             }).done(function(data){
                 if(data.results) {
@@ -65,6 +67,7 @@
             $("#badgeTableContainer").html(html);
             
             $(".nameBox").on('keydown', function(event){
+                console.log("Key Pressed!");
                 if(event.which == 9 || event.keycode == 9) {
                     console.log(parseInt($(this).attr('id').substring($(this).attr('id').indexOf('_') + 1)));
                     console.log($(this).attr('id').substring($(this).attr('id').indexOf('_') + 1));
@@ -82,7 +85,6 @@
                        end : end
                 }
             }).done(function(data){
-                console.log(data);
                 if(!$("#showUsedBadges").is(":checked")) {
                     data.forEach(function(item, index){
                         $("#badgeContainer_" + item.badge_id).hide();
@@ -96,15 +98,7 @@
             });
         }
         
-        $(document).ready(function(){
-            $("#addUser").hide();
-            $("#error").hide();
-            $("#badgeRegistration").hide();
-        });
-        
         function submitName(badgeId, name) {
-            console.log("sending the name associated with a badge fren");
-            console.log(badgeId + " : " + name);
             $.ajax({
                 url: '/register/addbadge',
                 type: "POST",
@@ -112,7 +106,8 @@
                 data: {name : $("#name").val(),
                        pin : $("#pin").val(),
                        badge : badgeId,
-                       newName : name
+                       newName : name,
+                       auth : ($("#allTimes_" + badgeId).is(":checked") ? 1 : 2)
                 }
             }).done(function(data){
                 if(data.results) {
@@ -123,6 +118,12 @@
                 }
             });
         }
+        
+        $(document).ready(function(){
+            $("#addUser").hide();
+            $("#error").hide();
+            $("#badgeRegistration").hide();
+        });
         
     </script>
 </head>
@@ -138,22 +139,26 @@
     </div>
     <div id="addUser">
         <h1>add user</h1>
+        <h3>Check the box to allow the user to use the door at all times and allow the user to add more users</h3>
         <input id="newName" type="text" placeholder="name"></textarea>
         <input id="newPin" type="password" rows=1 placeholder="pin">
+        <input id="allTimes" type="checkbox">
         <button onclick="addUser()">Add User</button>
         <span id="newError" style="color:red"></span>
     </div>
     <div id="badgeRegistration">
         <h1>Register Badges</h1>
+        <h3>Enter the range of badge id's you wish to register</h3>
         start : <input id="startRange" type="number">
         end : <input id="endRange" type="number">
         <button onclick="showBadges()">show badges</button>
         <span>Show used badges:</span><input style="margin-bottom: 40px" id="showUsedBadges" type="checkbox">
-        <h3>Enter a name, press tab to submit and move to next box</h3>
+        <h3>Enter a name, press tab to submit and move to next box<br>Check the box to allow the user to access the door at all times</h3>
         <div id="badgeTableContainer">
             <div id="badgeContainer_ID">
                 <div style="width: 80px; display: inline-block;">ID</div>
                 <input class="nameBox" id="nameBox_ID" type="text" placeholder="name">
+                <input id="allTimes_ID" type="checkbox">
             </div>
         </div>
     </div>

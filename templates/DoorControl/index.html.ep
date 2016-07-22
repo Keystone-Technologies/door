@@ -39,6 +39,7 @@ $(document).ready(function(){
     if ( $("#note").val() != "" ) {
         $("#ofd").show();
     }
+    
     $("#note").keyup(function(){
         if ( $(this).val() == "" ) {
             $("#ofd").hide();
@@ -62,41 +63,25 @@ $(document).ready(function(){
                 if ( $('#remember').is(":checked") ) {
                     $("#login").hide();
                 }
+                showMessage("Success, door unlocked", 'green');
                 $("#name").html($("#note").val());
             } else {
                 $("#login").show();
-                $("#strike-message").html(data.message);
-                $("#dialog-message").dialog({
-                    modal: true,
-                    buttons: {
-                        Ok: function() {
-                            $("#unlock").css("color", "blue");
-                            $(this).dialog("close");
-                        }
-                    }
-                });
+                showMessage("Failed", 'red');
             }
         });
     });
     
     $("#lock").click(function(){
-        $.post("/lock", {note: "Lock"}, function(data){
+        $.post("/lock", function(data){
             if ( data.response ) {
+                showMessage("Success, door locked", 'green');
             } else {
-                $("#login").show();
-                $("#strike-message").html(data.message);
-                $("#dialog-message").dialog({
-                    modal: true,
-                    buttons: {
-                        Ok: function() {
-                            $("#lock").css("color", "blue");
-                            $(this).dialog("close");
-                        }
-                    }
-                });
+                showMessage("Failed", 'red');
             }
         });
     });
+    
     $("#hold").css("color", "blue").bind('vmousedown', function(e){
         e.preventDefault();
         $(this).css("color", "red");
@@ -105,28 +90,25 @@ $(document).ready(function(){
                 if ( $('#remember').is(":checked") ) {
                     $("#login").hide();
                 }
-                if ( data.name ) {
-                    $("#name").html($('#note').val());
-                }
+                showMessage("Success, door unlocked", 'green');
+                $("#name").html($("#note").val());
             } else {
                 $("#login").show();
-                $("#strike-message").html(data.message);
-                $("#dialog-message").dialog({
-                    modal: true,
-                    buttons: {
-                        Ok: function() {
-                            $("#hold").css("color", "blue");
-                            $(this).dialog("close");
-                        }
-                    }
-                });
+                showMessage("Failed", 'red');
             }
         });
     }).bind('vmouseup', function(e){
         e.preventDefault();
         $(this).css("color", "blue");
-        $.post("/lock");
+        $.post("/lock", function(data) {
+            if ( data.response ) {
+                showMessage("Success, door locked", 'green');
+            } else {
+                showMessage("Failed", 'red');
+            }
+        });
     });
+    
     $("#click").click(function(){
         $.post("/ofd", {state: 2, note: $('#note').val(), pin: $('#pin').val(), remember: $('#remember').is(":checked")?1:0}, function(data){
             if ( data.ok ) {
@@ -145,8 +127,15 @@ $(document).ready(function(){
                 });
             }
             return true;
-	});
+	    });
     });
+    
+    function showMessage(message, color) {
+        $("#messageBox").show();
+        $("#message").css("color", color).html(message);
+        setTimeout(function(){$("#messageBox").hide()}, 5000);
+    }
+    
 % unless ( $self->internal || session 'pin' ) {
     $("#login").show();
 % }
@@ -187,15 +176,9 @@ Welcome, <span id="name"><%= session('name') || 'stranger' %></span> from <%= $s
       <div id="unlock" data-role="button" data-icon="gear">Unlock Front Door</div><br />
     % }
 </div>
-<div id="lock" data-role="button" data-icon="gear">Lock Front Door</div><br />
-<div id="dialog-message" title="Failed to unlock">
-    <p>
-        <span class="ui-icon ui-icon-circle-close" style="float: left; margin: 0 7px 50px 0;"></span>
-        Your attempt to remotely unlock the door has failed.
-    </p>
-    <p>
-        <span id="strike-message"></span>
-    </p>
+<div id="lock" data-role="button" data-icon="gear">Lock Front Door</div>
+<div id="messageBox" style="display:none;">
+    <h2 id="message">hi</h2>
 </div>
 </div>
 </div>
