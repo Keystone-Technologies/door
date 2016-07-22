@@ -17,7 +17,6 @@ sub unlock {
     my $name = $self->param('name');
     my $pin = $self->param('pin');
     my $remember = $self->param('remember');
-    my $ip = $self->param('ip');
     
     my $unlockResults = "FAILED";
     
