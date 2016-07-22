@@ -28,3 +28,16 @@ insert into log (id, name, action, result) values (0, 'tester', 'lock', 'succeed
 -- 2 down
 
 drop table if exists log;
+
+--3 up
+
+create table if not exists badges(
+    badge_id    int not null,
+    name        text not null,
+    authorized  int not null
+);
+
+insert into badges(badge_id, name, authorized) values (0123456, 'tester', 1);
+--3 down
+
+drop table if exists badges;

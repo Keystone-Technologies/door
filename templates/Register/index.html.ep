@@ -6,6 +6,8 @@
     <title>Register</title>
     <script>
         
+        var badgeHtml = "";
+        
         function signIn() {
             $.ajax({
                 url: '/register/signin',
@@ -18,6 +20,7 @@
                 if(data.results) {
                     $("#signIn").hide();
                     $("#addUser").show();
+                    $("#badgeRegistration").show();
                 }
                 else
                 {
@@ -28,7 +31,6 @@
         }
         
         function addUser() {
-            console.log()
             $.ajax({
                 url: '/register/adduser',
                 type: "POST",
@@ -51,14 +53,81 @@
             });
         }
         
+        function showBadges() {
+            var start = $("#startRange").val();
+            var end = $("#endRange").val();
+            if(badgeHtml == ""){badgeHtml = $("#badgeTableContainer").html()};
+            var html = "";
+            for(var i = 0; i <= end - start; i ++) {
+                var num = (parseInt(start) + parseInt(i)).toString();
+                html += badgeHtml.replace(/ID/g, num);
+            }
+            $("#badgeTableContainer").html(html);
+            
+            $(".nameBox").on('keydown', function(event){
+                if(event.which == 9 || event.keycode == 9) {
+                    console.log(parseInt($(this).attr('id').substring($(this).attr('id').indexOf('_') + 1)));
+                    console.log($(this).attr('id').substring($(this).attr('id').indexOf('_') + 1));
+                    submitName(parseInt($(this).attr('id').substring($(this).attr('id').indexOf('_') + 1)), $(this).val());
+                }
+            });
+            
+            $.ajax({
+                url: '/register/badges',
+                type: "GET",
+                dataType: "json",
+                data: {name : $("#name").val(),
+                       pin : $("#pin").val(),
+                       start : start,
+                       end : end
+                }
+            }).done(function(data){
+                console.log(data);
+                if(!$("#showUsedBadges").is(":checked")) {
+                    data.forEach(function(item, index){
+                        $("#badgeContainer_" + item.badge_id).hide();
+                    });
+                }
+                else {
+                    data.forEach(function(item, index) {
+                       $("#nameBox_" + item.badge_id).val(item.name); 
+                    });
+                }
+            });
+        }
+        
         $(document).ready(function(){
             $("#addUser").hide();
             $("#error").hide();
+            $("#badgeRegistration").hide();
         });
+        
+        function submitName(badgeId, name) {
+            console.log("sending the name associated with a badge fren");
+            console.log(badgeId + " : " + name);
+            $.ajax({
+                url: '/register/addbadge',
+                type: "POST",
+                dataType: "json",
+                data: {name : $("#name").val(),
+                       pin : $("#pin").val(),
+                       badge : badgeId,
+                       newName : name
+                }
+            }).done(function(data){
+                if(data.results) {
+                    console.log("Success!");
+                }
+                else {
+                    console.log("No success!");
+                }
+            });
+        }
         
     </script>
 </head>
 <body>
+    <h3><a href='/'>Return Home</a></h3>
     <div id="signIn">
         <h1>sign in</h1>
         <h3>To register a new user, you must be signed in and authorized</h3>
@@ -74,7 +143,20 @@
         <button onclick="addUser()">Add User</button>
         <span id="newError" style="color:red"></span>
     </div>
-    <h3><a href='/'>Return Home</a></h3>
+    <div id="badgeRegistration">
+        <h1>Register Badges</h1>
+        start : <input id="startRange" type="number">
+        end : <input id="endRange" type="number">
+        <button onclick="showBadges()">show badges</button>
+        <span>Show used badges:</span><input style="margin-bottom: 40px" id="showUsedBadges" type="checkbox">
+        <h3>Enter a name, press tab to submit and move to next box</h3>
+        <div id="badgeTableContainer">
+            <div id="badgeContainer_ID">
+                <div style="width: 80px; display: inline-block;">ID</div>
+                <input class="nameBox" id="nameBox_ID" type="text" placeholder="name">
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

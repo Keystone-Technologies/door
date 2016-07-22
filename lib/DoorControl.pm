@@ -33,11 +33,13 @@ sub startup {
   $r->get('/forget')->to('DoorControl#forget');
   $r->get('/log/:count')->to('DoorControl#log');
   $r->get('/register')->to('Register#index');
+  $r->get('/register/badges')->to('Register#badges');
   
   $r->post('/unlock')->to('DoorControl#unlock');
   $r->post('/lock')->to("DoorControl#lock");
   $r->post('/register/signin')->to('Register#signin');
   $r->post('/register/adduser')->to('Register#adduser');
+  $r->post('/register/addbadge')->to('Register#addbadge');
 }
 
 1;
