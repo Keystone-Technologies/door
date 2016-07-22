@@ -17,6 +17,7 @@ sub unlock {
     my $name = $self->param('name');
     my $pin = $self->param('pin');
     my $remember = $self->param('remember');
+    my $ip = $self->param('ip');
     
     my $unlockResults = "FAILED";
     
@@ -26,7 +27,7 @@ sub unlock {
     
     my $response->{result} = 0;
     
-    if($results->{authorized} == 1 || ($results->{authorized} == 2 && Date_IsWorkDay(ParseDate('now'), 1))) {
+    if($results->{authorized} == 1 || $self->internal || ($results->{authorized} == 2 && Date_IsWorkDay(ParseDate('now'), 1))) {
         $response->{result} = 1;
         my $req = HTTP::Request->new(GET => "http://theofficialjosh.com/test");
         my $ua = LWP::UserAgent->new;
