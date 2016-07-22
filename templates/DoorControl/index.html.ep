@@ -139,6 +139,9 @@ $(document).ready(function(){
 % unless ( $self->internal || session 'pin' ) {
     $("#login").show();
 % }
+  %if($self->internal || session 'pin') {
+    $("#ofd").show();
+  %}
 });
 //]]></script>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
