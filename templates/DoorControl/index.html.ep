@@ -8,7 +8,7 @@
 <!--/* <![CDATA[ */
     buzz {color:red;}
     #name {cursor:pointer;text-decoration:underline;color:blue}
-    #ofd, #login, #dialog-message {display:none}
+    #open_front_door, #login, #dialog-message {display:none}
     #hold {cursor:pointer;text-decoration:underline}
     #lock {cursor:pointer;text-decoration:underline}
     #unlock {cursor:pointer;text-decoration:underline}
@@ -36,14 +36,14 @@ $(document).ready(function(){
     %}
 
     if ( $("#note").val() != "" ) {
-        $("#ofd").show();
+        $("#open_front_door").show();
     }
     
     $("#note").keyup(function(){
         if ( $(this).val() == "" ) {
-            $("#ofd").hide();
+            $("#open_front_door").hide();
         } else {
-            $("#ofd").show();
+            $("#open_front_door").show();
         }
     });
     
@@ -118,7 +118,7 @@ $(document).ready(function(){
     $("#login").show();
 % }
   %if($self->internal || session 'pin') {
-    $("#ofd").show();
+    $("#open_front_door").show();
   %}
 });
 //]]></script>
@@ -149,7 +149,7 @@ Welcome, <span id="name"><%= session('name') || 'stranger' %></span> from <%= $s
 </div>
 
 <br />
-<div id="ofd">
+<div id="open_front_door">
     <div id="hold" data-role="button" data-icon="gear">Front Door Buzzer</div><br />
     <div id="unlock" data-role="button" data-icon="gear">Unlock Front Door</div><br />
 </div>
