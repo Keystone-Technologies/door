@@ -1,11 +1,12 @@
 package DoorControl::Model::DoorControl;
 use Mojo::Base -base;
 
-has 'pg';
+use Date::Manip;
 
 sub unlock {
     my ($self, $authorized, $internal) = @_;
     
+    $authorized //= 0;
     my $results = 0;
     
     if($authorized == 1 || $internal || ($authorized == 2 && Date_IsWorkDay(ParseDate('now'), 1))) {
