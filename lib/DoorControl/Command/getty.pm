@@ -26,7 +26,7 @@ sub run {
             $userinput = $request->{name};
         }
         
-        $self->app->pg->db->query("insert into log (name, action, result) values (?, 'unlock', ?);", $userinput, $results);
+        $self->app->pg->db->query("insert into log (name, action, result, method) values (?, 'unlock', ?, 'badge');", $userinput, $results);
     }
 }
 

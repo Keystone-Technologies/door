@@ -39,7 +39,7 @@ sub unlock {
         }
     }
     
-    $self->pg->db->query("insert into log (name, action, result) values (?, 'unlock', ?);", $name, $unlockResults);
+    $self->pg->db->query("insert into log (name, action, result, method) values (?, 'unlock', ?, 'website');", $name, $unlockResults);
     
     $self->render(json => $response);
 }
@@ -50,7 +50,7 @@ sub lock {
     my $ua = Mojo::UserAgent->new;
     my $response->{response} = $ua->get('theofficialjosh.com/test')->res->code == 200 ? 1 : 0;
     
-    $self->pg->db->query("insert into log (name, action, result) values ('door', 'lock', ?);", $response->{response} ? 'SUCCESS' : 'FAILED');
+    $self->pg->db->query("insert into log (name, action, result, method) values ('door', 'lock', ?, 'website');", $response->{response} ? 'SUCCESS' : 'FAILED');
     
     $self->render(json => $response);
 }
@@ -59,7 +59,7 @@ sub log {
     my $self = shift;
     my $limit = $self->param('count');
     my $results = eval {
-        $self->pg->db->query("select id, action, result, name, created from log order by created desc limit ?;", $limit)->hashes->to_array;
+        $self->pg->db->query("select id, action, method, result, name, created from log order by created desc limit ?;", $limit)->hashes->to_array;
     };
     
     $self->stash(logs => $results);
