@@ -28,6 +28,8 @@ $(document).ready(function(){
 //$(document).delegate('#data', 'pageinit', function() {
 % }
 
+    var timeoutId = 50;
+
     %if($pin) {
         $("#pin").val(<%=$pin%>);
     %}
@@ -111,7 +113,8 @@ $(document).ready(function(){
     function showMessage(message, color) {
         $("#messageBox").show();
         $("#message").css("color", color).html(message);
-        setTimeout(function(){$("#messageBox").hide()}, 5000);
+        window.clearTimeout(timeoutId);
+        timeoutId = window.setTimeout(function(){$("#messageBox").hide()}, 5000);
     }
     
 % unless ( $self->internal || session 'pin' ) {
