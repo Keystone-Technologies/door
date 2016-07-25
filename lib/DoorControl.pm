@@ -4,6 +4,10 @@ use Mojo::UserAgent;
 use Mojo::Pg;
 use Date::Manip;
 
+use DoorControl::Model::DoorControl;
+use DoorControl::Model::Authenticate;
+use DoorControl::Model::Log;
+
 use constant INTERNAL => qr/^127\.|^(172\.16\.254\.\d{1,3})$/;
 
 # This method will run once at server start
@@ -19,6 +23,9 @@ sub startup {
 
   $self->helper(internal => sub { shift->tx->remote_address=~INTERNAL?1:0 });
   $self->helper(pg => sub {state $pg = Mojo::Pg->new(shift->config('pg')) });
+  $self->helper(doorcontrol => sub { state $doorcontrol = DoorControl::Model::DoorControl->new(pg => shift->pg) });
+  $self->helper(authenticate => sub { state $authenticate = DoorControl::Model::Authenticate->new(pg => shift->pg) });
+  $self->helper(logger => sub { state $log = DoorControl::Model::Log->new(pg => shift->pg) });
 
   $self->sessions->default_expiration(86400*365*10);
   

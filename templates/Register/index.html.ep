@@ -89,7 +89,10 @@
                 }
                 else {
                     data.forEach(function(item, index) {
-                       $("#nameBox_" + item.badge_id).val(item.name); 
+                       $("#nameBox_" + item.badge_id).val(item.name);
+                       if(item.authorized == 1) {
+                           $("#allTimes_" + item.badge_id).prop('checked', true);
+                       }
                     });
                 }
             });

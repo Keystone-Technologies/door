@@ -14,19 +14,15 @@ sub run {
         my $results = "FAILED";
         chomp ($userinput);
         
-        my $request = eval {
-            $self->app->pg->db->query("select * from badges where badge_id = ?;", $userinput)->hash;
-        };
+        my $user = $self->app->authenticate->authenticateBadge($userinput);
         
-        if($request->{authorized} == 1 || ($request->{authorized} == 2 && Date_IsWorkDay(ParseDate('now'), 1))) {
-            my $ua = Mojo::UserAgent->new;
-            $results = $ua->get('theofficialjosh.com/test')->res->code == 200 ? "SUCCESS" : "FAILED";
-        }
-        if(defined $request->{name}) {
-            $userinput = $request->{name};
+        $results = $self->app->doorcontrol->unlock($user->{authorized}, 0) ? "SUCCESS" : "FAILED";
+        
+        if(defined $user->{name}) {
+            $userinput = $user->{name};
         }
         
-        $self->app->pg->db->query("insert into log (name, action, result, method) values (?, 'unlock', ?, 'badge');", $userinput, $results);
+        $self->app->logger->log($userinput, "unlock", $results, "badge");
     }
 }
 

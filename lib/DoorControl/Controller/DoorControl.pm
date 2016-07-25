@@ -16,30 +16,23 @@ sub unlock {
     my $pin = $self->param('pin');
     my $remember = $self->param('remember');
     
-    my $unlockResults = "FAILED";
+    my $results = "FAILED";
+    my $response->{response} = 0;
     
-    my $results = eval {
-        $self->pg->db->query("select * from users where name = ? and pin = ?", $name, $pin)->hash;
-    };
+    my $authorized = $self->authenticate->authenticateUser($name, $pin);
     
-    my $response->{result} = 0;
+    $response->{response} = $self->doorcontrol->unlock($authorized, $self->internal);
     
-    if($results->{authorized} == 1 || $self->internal || ($results->{authorized} == 2 && Date_IsWorkDay(ParseDate('now'), 1))) {
-        $response->{result} = 1;
-        my $ua = Mojo::UserAgent->new;
-        $response->{response} = $ua->get('theofficialjosh.com/test')->res->code == 200 ? 1 : 0;
+    if($response->{response} == 1) {
+        $results = "SUCCESS";
         
         if($remember) {
             $self->session->{pin} = $pin;
             $self->session->{name} = $name;
         }
-        
-        if($response->{response}) {
-            $unlockResults = "SUCCESS";
-        }
     }
     
-    $self->pg->db->query("insert into log (name, action, result, method) values (?, 'unlock', ?, 'website');", $name, $unlockResults);
+    $self->logger->log($name, 'unlock', $results, 'website');
     
     $self->render(json => $response);
 }
@@ -47,10 +40,9 @@ sub unlock {
 sub lock {
     my $self = shift;
     #locks the door, maybe happens automatically after unlocking it?
-    my $ua = Mojo::UserAgent->new;
-    my $response->{response} = $ua->get('theofficialjosh.com/test')->res->code == 200 ? 1 : 0;
+    my $response->{response} = $self->doorcontrol->lock();
     
-    $self->pg->db->query("insert into log (name, action, result, method) values ('door', 'lock', ?, 'website');", $response->{response} ? 'SUCCESS' : 'FAILED');
+    $self->logger->log("Door", "Lock", $response->{response} ? 'SUCCESS' : 'FAILED', "website");
     
     $self->render(json => $response);
 }
@@ -58,10 +50,8 @@ sub lock {
 sub log {
     my $self = shift;
     my $limit = $self->param('count');
-    my $results = eval {
-        $self->pg->db->query("select id, action, method, result, name, created from log order by created desc limit ?;", $limit)->hashes->to_array;
-    };
-    
+    my $results = $self->logger->getLog($limit); 
+
     $self->stash(logs => $results);
     
     $self->render(template => 'DoorControl/log', format => 'html', handler => 'ep');

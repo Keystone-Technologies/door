@@ -15,11 +15,9 @@ sub signin {
     
     my $response->{results} = 0;
     
-    my $results = eval {
-        $self->pg->db->query("select * from users where name = ? and pin = ?;", $name, $pin)->hash;
-    };
+    my $authorized = $self->authenticate->authenticateUser($name, $pin);
     
-    if($results->{authorized} == 1) {
+    if($authorized == 1) {
         $response->{results} = 1;
     };
     
@@ -37,11 +35,9 @@ sub adduser {
     
     my $response->{results} = 0;
     
-    my $results = eval {
-        $self->pg->db->query("select * from users where name = ? and pin = ?;", $name, $pin)->hash;
-    };
+    my $authorized = $self->authenticate->authenticateUser($name, $pin);
     
-    if($results->{authorized} == 1) {
+    if($authorized == 1) {
         $response->{results} = 1;
         $self->pg->db->query("insert into users (name, pin, authorized) values (?, ?, ?);", $newName, $newPin, $auth);
     };
@@ -57,11 +53,11 @@ sub badges {
     my $start = $self->param('start');
     my $end = $self->param('end');
     
-    my $results = eval {
-        $self->pg->db->query("select * from users where name = ? and pin = ?;", $name, $pin)->hash;
-    };
+    my $authorized = $self->authenticate->authenticateUser($name, $pin);
     
-    if($results->{authorized} == 1) {
+    my $results;
+    
+    if($authorized == 1) {
         $results = eval {
             $self->pg->db->query("select * from badges where badge_id >= ? and badge_id <= ?", $start, $end)->hashes->to_array;
         };
@@ -81,16 +77,12 @@ sub addbadge {
     
     my $response->{results} = 0;
     
-    my $results = eval {
-        $self->pg->db->query("select * from users where name = ? and pin = ?;", $name, $pin)->hash;
-    };
+    my $authorized = $self->authenticate->authenticateUser($name, $pin);
     
-    if($results->{authorized} == 1) {
+    if($authorized == 1) {
         $response->{results} = 1;
-        $results = eval {
-            $self->pg->db->query("delete from badges where badge_id = ?", $badge);
-            $self->pg->db->query("insert into badges (badge_id, name, authorized) values (?, ?, ?);", $badge, $newName, $auth);
-        };
+        $self->pg->db->query("delete from badges where badge_id = ?", $badge);
+        $self->pg->db->query("insert into badges (badge_id, name, authorized) values (?, ?, ?);", $badge, $newName, $auth);
     };
     
     $self->render(json => $response);
