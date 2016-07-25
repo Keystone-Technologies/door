@@ -1,6 +1,7 @@
 package DoorControl::Command::getty;
 use Mojo::Base 'Mojolicious::Command';
 use Date::Manip;
+use Mojo::UserAgent;
 
 has description => 'Show versions of available modules';
 has usage => sub { shift->extract_usage };
@@ -18,9 +19,8 @@ sub run {
         };
         
         if($request->{authorized} == 1 || ($request->{authorized} == 2 && Date_IsWorkDay(ParseDate('now'), 1))) {
-            my $req = HTTP::Request->new(GET => "http://theofficialjosh.com/test");
-            my $ua = LWP::UserAgent->new;
-            $results = $ua->request($req)->is_success ? "SUCCESS" : "FAILED";
+            my $ua = Mojo::UserAgent->new;
+            $results = $ua->get('theofficialjosh.com/test')->res->code == 200 ? "SUCCESS" : "FAILED";
         }
         if(defined $request->{name}) {
             $userinput = $request->{name};

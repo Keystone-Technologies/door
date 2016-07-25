@@ -41,3 +41,7 @@ insert into badges(badge_id, name, authorized) values (0123456, 'tester', 1);
 --3 down
 
 drop table if exists badges;
+
+
+
+

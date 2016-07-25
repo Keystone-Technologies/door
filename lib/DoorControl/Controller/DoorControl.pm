@@ -1,8 +1,6 @@
 package DoorControl::Controller::DoorControl;
 use Mojo::Base 'Mojolicious::Controller';
 
-use Date::Manip;
-
 # This action will render a template
 sub init {
   my $self = shift;
@@ -28,9 +26,8 @@ sub unlock {
     
     if($results->{authorized} == 1 || $self->internal || ($results->{authorized} == 2 && Date_IsWorkDay(ParseDate('now'), 1))) {
         $response->{result} = 1;
-        my $req = HTTP::Request->new(GET => "http://theofficialjosh.com/test");
-        my $ua = LWP::UserAgent->new;
-        $response->{response} = $ua->request($req)->is_success;
+        my $ua = Mojo::UserAgent->new;
+        $response->{response} = $ua->get('theofficialjosh.com/test')->res->code == 200 ? 1 : 0;
         
         if($remember) {
             $self->session->{pin} = $pin;
@@ -50,9 +47,8 @@ sub unlock {
 sub lock {
     my $self = shift;
     #locks the door, maybe happens automatically after unlocking it?
-    my $req = HTTP::Request->new(GET => "http://theofficialjosh.com/test");
-    my $ua = LWP::UserAgent->new;
-    my $response->{response} = $ua->request($req)->is_success;
+    my $ua = Mojo::UserAgent->new;
+    my $response->{response} = $ua->get('theofficialjosh.com/test')->res->code == 200 ? 1 : 0;
     
     $self->pg->db->query("insert into log (name, action, result) values ('door', 'lock', ?);", $response->{response} ? 'SUCCESS' : 'FAILED');
     

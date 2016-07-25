@@ -1,13 +1,8 @@
 package DoorControl;
 use Mojo::Base 'Mojolicious';
-
-use Mojo::IOLoop;
-
+use Mojo::UserAgent;
 use Mojo::Pg;
-use HTTP::Request;
-use LWP::UserAgent;
-use Date::Manip::DM5;
-use Time::ParseDate;
+use Date::Manip;
 
 use constant INTERNAL => qr/^127\.|^(172\.16\.254\.\d{1,3})$/;
 
