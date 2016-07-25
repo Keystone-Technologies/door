@@ -59,18 +59,23 @@ $(document).ready(function(){
     });
     
     $("#unlock").click(function(){
-        $.post("/unlock", {name: $("#note").val(), pin: $('#pin').val(), remember: $('#remember').is(":checked")?1:0}, function(data){
-            if ( data.response ) {
-                if ( $('#remember').is(":checked") ) {
-                    $("#login").hide();
+        if($('#pin').val() == ""){
+                showMessage("please input your pin", 'red');
+        }
+        else{
+            $.post("/unlock", {name: $("#note").val(), pin: $('#pin').val(), remember: $('#remember').is(":checked")?1:0}, function(data){
+                if ( data.response ) {
+                    if ( $('#remember').is(":checked") ) {
+                        $("#login").hide();
+                    }
+                    showMessage("Success, door unlocked", 'green');
+                    $("#name").html($("#note").val());
+                } else {
+                    $("#login").show();
+                    showMessage("Failed", 'red');
                 }
-                showMessage("Success, door unlocked", 'green');
-                $("#name").html($("#note").val());
-            } else {
-                $("#login").show();
-                showMessage("Failed", 'red');
-            }
-        });
+            });
+        }
     });
     
     $("#lock").click(function(){
@@ -86,18 +91,23 @@ $(document).ready(function(){
     $("#hold").css("color", "blue").bind('vmousedown', function(e){
         e.preventDefault();
         $(this).css("color", "red");
-        $.post("/unlock", {name: $('#note').val(), pin: $('#pin').val(), remember: $('#remember').is(":checked")?1:0, hold: 1}, function(data){
-            if ( data.response ) {
-                if ( $('#remember').is(":checked") ) {
-                    $("#login").hide();
+        if ($('#pin').val() == ""){
+            showMessage("please input your pin", 'red');
+        }
+        else{
+            $.post("/unlock", {name: $('#note').val(), pin: $('#pin').val(), remember: $('#remember').is(":checked")?1:0, hold: 1}, function(data){
+                if ( data.response ) {
+                    if ( $('#remember').is(":checked") ) {
+                        $("#login").hide();
+                    }
+                    showMessage("Success, door unlocked", 'green');
+                    $("#name").html($("#note").val());
+                } else {
+                    $("#login").show();
+                    showMessage("Failed", 'red');
                 }
-                showMessage("Success, door unlocked", 'green');
-                $("#name").html($("#note").val());
-            } else {
-                $("#login").show();
-                showMessage("Failed", 'red');
-            }
-        });
+            });
+        }
     }).bind('vmouseup', function(e){
         e.preventDefault();
         $(this).css("color", "blue");
