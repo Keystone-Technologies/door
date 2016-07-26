@@ -50,7 +50,7 @@ $(document).ready(function(){
     });
     
     $("#name").click(function(){
-        $.get("/forget", {}, function(data){
+        $.get('<%= url_for('forget') %>', {}, function(data){
             if(data.success) {
                 $("#login").show();
                 $("#name").html("stranger");
@@ -63,7 +63,7 @@ $(document).ready(function(){
                 showMessage("please input your pin", 'red');
         }
         else{
-            $.post("/unlock", {name: $("#note").val(), pin: $('#pin').val(), remember: $('#remember').is(":checked")?1:0}, function(data){
+            $.post('<%= url_for('unlock') %>', {name: $("#note").val(), pin: $('#pin').val(), remember: $('#remember').is(":checked")?1:0}, function(data){
                 if ( data.response ) {
                     if ( $('#remember').is(":checked") ) {
                         $("#login").hide();
@@ -79,7 +79,7 @@ $(document).ready(function(){
     });
     
     $("#lock").click(function(){
-        $.post("/lock", function(data){
+        $.post('<%= url_for('lock') %>', function(data){
             if ( data.response ) {
                 showMessage("Success, door locked", 'green');
             } else {
@@ -95,7 +95,7 @@ $(document).ready(function(){
             showMessage("please input your pin", 'red');
         }
         else{
-            $.post("/unlock", {name: $('#note').val(), pin: $('#pin').val(), remember: $('#remember').is(":checked")?1:0, hold: 1}, function(data){
+            $.post('<%= url_for('unlock') %>', {name: $('#note').val(), pin: $('#pin').val(), remember: $('#remember').is(":checked")?1:0, hold: 1}, function(data){
                 if ( data.response ) {
                     if ( $('#remember').is(":checked") ) {
                         $("#login").hide();
@@ -111,7 +111,7 @@ $(document).ready(function(){
     }).bind('vmouseup', function(e){
         e.preventDefault();
         $(this).css("color", "blue");
-        $.post("/lock", function(data) {
+        $.post('<%= url_for('lock') %>', function(data) {
             if ( data.response ) {
                 showMessage("Success, door locked", 'green');
             } else {
@@ -140,9 +140,9 @@ $(document).ready(function(){
 <body>
 <div id="data" data-url="data" data-role="page">
 <div data-role="header">
-<h1><a href="/log/20" rel="external">Door Access!</a></h1>
+<h1><a href='<%= url_for('log') %>20' rel="external">Door Access!</a></h1>
 </div>
-Click <a href="/register" rel="external">here</a> to add new users
+Click <a href='<%= url_for('register') %>' rel="external">here</a> to add new users
 <div data-role="content">
 Welcome, <span id="name"><%= session('name') || 'stranger' %></span> from <%= $self->tx->remote_address %>
 
@@ -174,3 +174,8 @@ Welcome, <span id="name"><%= session('name') || 'stranger' %></span> from <%= $s
 </div>
 </body>
 </html>
+
+
+% if ($c->config->{lock_url}){
+
+%}

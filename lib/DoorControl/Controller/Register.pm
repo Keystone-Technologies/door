@@ -17,7 +17,7 @@ sub signin {
     
     my $authorized = $self->authenticate->authenticateUser($name, $pin);
     
-    if($authorized == 1) {
+    if($authorized == DoorControl::FULL_AUTHORIZATION) {
         $response->{results} = 1;
     };
     
@@ -37,9 +37,9 @@ sub adduser {
     
     my $authorized = $self->authenticate->authenticateUser($name, $pin);
     
-    if($authorized == 1) {
+    if($authorized == DoorControl::FULL_AUTHORIZATION) {
         $response->{results} = 1;
-        $self->pg->db->query("insert into users (name, pin, authorized) values (?, ?, ?);", $newName, $newPin, $auth);
+        $self->register->insertUser($newName, $newPin, $auth);
     };
     
     $self->render(json => $response);
@@ -57,9 +57,9 @@ sub badges {
     
     my $results;
     
-    if($authorized == 1) {
+    if($authorized == DoorControl::FULL_AUTHORIZATION) {
         $results = eval {
-            $self->pg->db->query("select * from badges where badge_id >= ? and badge_id <= ?", $start, $end)->hashes->to_array;
+            $self->register->getBadges($start, $end);
         };
     };
     
@@ -79,10 +79,10 @@ sub addbadge {
     
     my $authorized = $self->authenticate->authenticateUser($name, $pin);
     
-    if($authorized == 1) {
+    if($authorized == DoorControl::FULL_AUTHORIZATION) {
         $response->{results} = 1;
-        $self->pg->db->query("delete from badges where badge_id = ?", $badge);
-        $self->pg->db->query("insert into badges (badge_id, name, authorized) values (?, ?, ?);", $badge, $newName, $auth);
+        $self->register->deleteBadge($badge);
+        $self->register->insertBadge($badge, $newName, $auth);
     };
     
     $self->render(json => $response);

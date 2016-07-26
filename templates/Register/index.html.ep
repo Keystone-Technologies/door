@@ -10,7 +10,7 @@
         
         function signIn() {
             $.ajax({
-                url: '/register/signin',
+                url: '<%= url_for('signin') %>',
                 type: "POST",
                 dataType: "json",
                 data: {name : $("#name").val(),
@@ -32,7 +32,7 @@
         
         function addUser() {
             $.ajax({
-                url: '/register/adduser',
+                url: '<%= url_for('adduser') %>',
                 type: "POST",
                 dataType: "json",
                 data: {name : $("#name").val(),
@@ -46,6 +46,8 @@
                 if(data.results) {
                     $("#newError").html("Succes! New user added.").show();
                     setTimeout(function(){$("#newError").hide()}, 5000);
+                    $("#newName").val('');
+                    $("#newPin").val('');
                 }
                 else
                 {
@@ -74,7 +76,7 @@
             });
             
             $.ajax({
-                url: '/register/badges',
+                url: '<%= url_for('badges') %>',
                 type: "GET",
                 dataType: "json",
                 data: {name : $("#name").val(),
@@ -101,7 +103,7 @@
         
         function submitName(badgeId, name) {
             $.ajax({
-                url: '/register/addbadge',
+                url: '<%= url_for('addbadge') %>',
                 type: "POST",
                 dataType: "json",
                 data: {name : $("#name").val(),
