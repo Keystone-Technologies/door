@@ -16,28 +16,23 @@ sub unlock {
     my $pin = $self->param('pin');
     my $remember = $self->param('remember');
     
-    my $unlockResults = "FAILED";
+    my $results = "FAILED";
+    my $response->{response} = 0;
     
-    my $results = eval {
-        $self->pg->db->query("select * from users where name = ? and pin = ?", $name, $pin)->hash;
-    };
+    my $authorized = $self->authenticate->authenticateUser($name, $pin);
     
-    my $response->{result} = 0;
+    $response->{response} = $self->doorcontrol->unlock($authorized, $self->internal);
     
-    if($results->{authorized} == 1) {
-        $response->{result} = 1;
-        my $req = HTTP::Request->new(GET => "http://theofficialjosh.com/test");
-        my $ua = LWP::UserAgent->new;
-        $response->{response} = $ua->request($req)->as_string;
+    if($response->{response} == 1) {
+        $results = "SUCCESS";
         
         if($remember) {
             $self->session->{pin} = $pin;
             $self->session->{name} = $name;
         }
-        $unlockResults = "SUCCESS";
     }
     
-    $self->pg->db->query("insert into log (name, action, result) values (?, 'unlock', ?);", $name, $unlockResults);
+    $self->logger->log($name, 'unlock', $results, 'website');
     
     $self->render(json => $response);
 }
@@ -45,13 +40,9 @@ sub unlock {
 sub lock {
     my $self = shift;
     #locks the door, maybe happens automatically after unlocking it?
-    my $req = HTTP::Request->new(GET => "http://theofficialjosh.com/test");
-    my $ua = LWP::UserAgent->new;
-    $ua->request($req)->as_string;
+    my $response->{response} = $self->doorcontrol->lock();
     
-    my $response->{response} = 1;
-    
-    $self->pg->db->query("insert into log (name, action, result) values ('door', 'lock', 'SUCCESS');");
+    $self->logger->log("Door", "Lock", $response->{response} ? 'SUCCESS' : 'FAILED', "website");
     
     $self->render(json => $response);
 }
@@ -59,10 +50,8 @@ sub lock {
 sub log {
     my $self = shift;
     my $limit = $self->param('count');
-    my $results = eval {
-        $self->pg->db->query("select id, action, result, name, created from log order by created desc limit ?;", $limit)->hashes->to_array;
-    };
-    
+    my $results = $self->logger->getLog($limit); 
+
     $self->stash(logs => $results);
     
     $self->render(template => 'DoorControl/log', format => 'html', handler => 'ep');

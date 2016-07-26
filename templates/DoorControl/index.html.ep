@@ -1,26 +1,25 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+    "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="https://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
 <head>
 <title>Cogstone Door</title>
 <style type="text/css">
 <!--/* <![CDATA[ */
     buzz {color:red;}
     #name {cursor:pointer;text-decoration:underline;color:blue}
-    #ofd, #login, #dialog-message {display:none}
+    #open_front_door, #login, #dialog-message {display:none}
     #hold {cursor:pointer;text-decoration:underline}
     #lock {cursor:pointer;text-decoration:underline}
     #unlock {cursor:pointer;text-decoration:underline}
-    #click {cursor:pointer;text-decoration:underline;color:blue;font-size:12px}
 /* ]]> */-->
 </style>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link   href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" type="text/css" rel="stylesheet" media="all" />
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js" type="text/javascript"></script>
-<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js" type="text/javascript"></script>
-<link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css" />
-<script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
+<link   href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" type="text/css" rel="stylesheet" media="all" />
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js" type="text/javascript"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js" type="text/javascript"></script>
+<link rel="stylesheet" href="https://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css" />
+<script src="https://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
 <script type="text/javascript">//<![CDATA[
 % if ( $self->browser->mobile ) {
 $(document).delegate('#data', 'pageinit', function() {
@@ -28,6 +27,8 @@ $(document).delegate('#data', 'pageinit', function() {
 $(document).ready(function(){
 //$(document).delegate('#data', 'pageinit', function() {
 % }
+
+    var timeoutId = 50;
 
     %if($pin) {
         $("#pin").val(<%=$pin%>);
@@ -37,18 +38,19 @@ $(document).ready(function(){
     %}
 
     if ( $("#note").val() != "" ) {
-        $("#ofd").show();
+        $("#open_front_door").show();
     }
+    
     $("#note").keyup(function(){
         if ( $(this).val() == "" ) {
-            $("#ofd").hide();
+            $("#open_front_door").hide();
         } else {
-            $("#ofd").show();
+            $("#open_front_door").show();
         }
     });
     
     $("#name").click(function(){
-        $.get("/forget", {}, function(data){
+        $.get('<%= url_for('forget') %>', {}, function(data){
             if(data.success) {
                 $("#login").show();
                 $("#name").html("stranger");
@@ -57,99 +59,80 @@ $(document).ready(function(){
     });
     
     $("#unlock").click(function(){
-        $.post("/unlock", {name: $("#note").val(), pin: $('#pin').val(), remember: $('#remember').is(":checked")?1:0}, function(data){
-            if ( data.response ) {
-                if ( $('#remember').is(":checked") ) {
-                    $("#login").hide();
-                }
-                $("#name").html($("#note").val());
-            } else {
-                $("#login").show();
-                $("#strike-message").html(data.message);
-                $("#dialog-message").dialog({
-                    modal: true,
-                    buttons: {
-                        Ok: function() {
-                            $("#unlock").css("color", "blue");
-                            $(this).dialog("close");
-                        }
+        if($('#pin').val() == ""){
+                showMessage("please input your pin", 'red');
+        }
+        else{
+            $.post('<%= url_for('unlock') %>', {name: $("#note").val(), pin: $('#pin').val(), remember: $('#remember').is(":checked")?1:0}, function(data){
+                if ( data.response ) {
+                    if ( $('#remember').is(":checked") ) {
+                        $("#login").hide();
                     }
-                });
+                    showMessage("Success, door unlocked", 'green');
+                    $("#name").html($("#note").val());
+                } else {
+                    $("#login").show();
+                    showMessage("Failed", 'red');
+                }
+            });
+        }
+    });
+    
+    $("#lock").click(function(){
+        $.post('<%= url_for('lock') %>', function(data){
+            if ( data.response ) {
+                showMessage("Success, door locked", 'green');
+            } else {
+                showMessage("Failed", 'red');
             }
         });
     });
     
-    $("#lock").click(function(){
-        $.post("/lock", {note: "Lock"}, function(data){
-            if ( data.response ) {
-            } else {
-                $("#login").show();
-                $("#strike-message").html(data.message);
-                $("#dialog-message").dialog({
-                    modal: true,
-                    buttons: {
-                        Ok: function() {
-                            $("#lock").css("color", "blue");
-                            $(this).dialog("close");
-                        }
-                    }
-                });
-            }
-        });
-    });
     $("#hold").css("color", "blue").bind('vmousedown', function(e){
         e.preventDefault();
         $(this).css("color", "red");
-        $.post("/unlock", {name: $('#note').val(), pin: $('#pin').val(), remember: $('#remember').is(":checked")?1:0, hold: 1}, function(data){
-            if ( data.response ) {
-                if ( $('#remember').is(":checked") ) {
-                    $("#login").hide();
-                }
-                if ( data.name ) {
-                    $("#name").html($('#note').val());
-                }
-            } else {
-                $("#login").show();
-                $("#strike-message").html(data.message);
-                $("#dialog-message").dialog({
-                    modal: true,
-                    buttons: {
-                        Ok: function() {
-                            $("#hold").css("color", "blue");
-                            $(this).dialog("close");
-                        }
+        if ($('#pin').val() == ""){
+            showMessage("please input your pin", 'red');
+        }
+        else{
+            $.post('<%= url_for('unlock') %>', {name: $('#note').val(), pin: $('#pin').val(), remember: $('#remember').is(":checked")?1:0, hold: 1}, function(data){
+                if ( data.response ) {
+                    if ( $('#remember').is(":checked") ) {
+                        $("#login").hide();
                     }
-                });
-            }
-        });
+                    showMessage("Success, door unlocked", 'green');
+                    $("#name").html($("#note").val());
+                } else {
+                    $("#login").show();
+                    showMessage("Failed", 'red');
+                }
+            });
+        }
     }).bind('vmouseup', function(e){
         e.preventDefault();
         $(this).css("color", "blue");
-        $.post("/lock");
-    });
-    $("#click").click(function(){
-        $.post("/ofd", {state: 2, note: $('#note').val(), pin: $('#pin').val(), remember: $('#remember').is(":checked")?1:0}, function(data){
-            if ( data.ok ) {
-                if ( $('#remember').is(":checked") ) {
-                    $("#login").hide();
-                    $("#name").html(data.name);
-                }
+        $.post('<%= url_for('lock') %>', function(data) {
+            if ( data.response ) {
+                showMessage("Success, door locked", 'green');
             } else {
-                $("#login").show();
-                $("#strike-message").html(data.message);
-                $("#dialog-message").dialog({
-                    modal: true,
-                    buttons: {
-                        Ok: function() { $(this).dialog("close"); }
-                    }
-                });
+                showMessage("Failed", 'red');
             }
-            return true;
-	});
+        });
     });
+    
+    function showMessage(message, color) {
+        $("#messageBox").show();
+        $("#message").css("color", color).html(message);
+        window.clearTimeout(timeoutId);
+        timeoutId = window.setTimeout(function(){$("#messageBox").hide()}, 5000);
+    }
+    
 % unless ( $self->internal || session 'pin' ) {
     $("#login").show();
 % }
+  %if($self->internal || session 'pin') {
+    $("#open_front_door").show();
+  %}
 });
 //]]></script>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
@@ -157,9 +140,9 @@ $(document).ready(function(){
 <body>
 <div id="data" data-url="data" data-role="page">
 <div data-role="header">
-<h1><a href="/log/20" rel="external">Door Access!</a></h1>
+<h1><a href='<%= url_for('log') %>20' rel="external">Door Access!</a></h1>
 </div>
-Click <a href="/register" rel="external">here</a> to add new users
+Click <a href='<%= url_for('register') %>' rel="external">here</a> to add new users
 <div data-role="content">
 Welcome, <span id="name"><%= session('name') || 'stranger' %></span> from <%= $self->tx->remote_address %>
 
@@ -179,25 +162,20 @@ Welcome, <span id="name"><%= session('name') || 'stranger' %></span> from <%= $s
 </div>
 
 <br />
-<div id="ofd">
-    % if ( 0 && $self->browser->mobile ) {
-      <div id="click"><br /><br />Pulse Front Door Buzzer</div>
-    % } else {
-      <div id="hold" data-role="button" data-icon="gear">Front Door Buzzer</div><br />
-      <div id="unlock" data-role="button" data-icon="gear">Unlock Front Door</div><br />
-    % }
+<div id="open_front_door">
+    <div id="hold" data-role="button" data-icon="gear">Front Door Buzzer</div><br />
+    <div id="unlock" data-role="button" data-icon="gear">Unlock Front Door</div><br />
 </div>
-<div id="lock" data-role="button" data-icon="gear">Lock Front Door</div><br />
-<div id="dialog-message" title="Failed to unlock">
-    <p>
-        <span class="ui-icon ui-icon-circle-close" style="float: left; margin: 0 7px 50px 0;"></span>
-        Your attempt to remotely unlock the door has failed.
-    </p>
-    <p>
-        <span id="strike-message"></span>
-    </p>
+<div id="lock" data-role="button" data-icon="gear">Lock Front Door</div>
+<div id="messageBox" style="display:none;">
+    <h2 id="message">hi</h2>
 </div>
 </div>
 </div>
 </body>
 </html>
+
+
+% if ($c->config->{lock_url}){
+
+%}

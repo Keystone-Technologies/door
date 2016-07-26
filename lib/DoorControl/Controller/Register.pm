@@ -15,11 +15,9 @@ sub signin {
     
     my $response->{results} = 0;
     
-    my $results = eval {
-        $self->pg->db->query("select * from users where name = ? and pin = ?;", $name, $pin)->hash;
-    };
+    my $authorized = $self->authenticate->authenticateUser($name, $pin);
     
-    if($results->{authorized} == 1) {
+    if($authorized == DoorControl::FULL_AUTHORIZATION) {
         $response->{results} = 1;
     };
     
@@ -33,16 +31,58 @@ sub adduser {
     my $pin = $self->param('pin');
     my $newName = $self->param('newName');
     my $newPin = $self->param('newPin');
+    my $auth = $self->param('auth');
     
     my $response->{results} = 0;
     
-    my $results = eval {
-        $self->pg->db->query("select * from users where name = ? and pin = ?;", $name, $pin)->hash;
+    my $authorized = $self->authenticate->authenticateUser($name, $pin);
+    
+    if($authorized == DoorControl::FULL_AUTHORIZATION) {
+        $response->{results} = 1;
+        $self->register->insertUser($newName, $newPin, $auth);
     };
     
-    if($results->{authorized} == 1) {
+    $self->render(json => $response);
+}
+
+sub badges {
+    my $self = shift;
+    
+    my $name = $self->param('name');
+    my $pin = $self->param('pin');
+    my $start = $self->param('start');
+    my $end = $self->param('end');
+    
+    my $authorized = $self->authenticate->authenticateUser($name, $pin);
+    
+    my $results;
+    
+    if($authorized == DoorControl::FULL_AUTHORIZATION) {
+        $results = eval {
+            $self->register->getBadges($start, $end);
+        };
+    };
+    
+    $self->render(json => $results);
+}
+
+sub addbadge {
+    my $self = shift;
+    
+    my $name = $self->param('name');
+    my $pin = $self->param('pin');
+    my $badge = $self->param('badge');
+    my $newName = $self->param('newName');
+    my $auth = $self->param('auth');
+    
+    my $response->{results} = 0;
+    
+    my $authorized = $self->authenticate->authenticateUser($name, $pin);
+    
+    if($authorized == DoorControl::FULL_AUTHORIZATION) {
         $response->{results} = 1;
-        $self->pg->db->query("insert into users (name, pin, authorized) values (?, ?, 1);", $newName, $newPin);
+        $self->register->deleteBadge($badge);
+        $self->register->insertBadge($badge, $newName, $auth);
     };
     
     $self->render(json => $response);
